@@ -1,0 +1,14 @@
+pipeline:
+  image_to_quay:
+    image: quay.io/ukhomeofficedigital/drone-docker
+    secrets:
+    - source: QUAY_USERNAME
+      target: DOCKER_USERNAME
+    - source: QUAY_PASSWORD
+      target: DOCKER_PASSWORD
+    registry: quay.io
+    repo: https://quay.io/repository/ukhomeofficedigital/mysql57-backup-to-s3
+    tags: ${DRONE_COMMIT_SHA}
+    when:
+      branch: master
+      event: push
