@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    db: mysql
+    type: oneshot
+    maintenance: true
+  name: mysql-backup-to-s3
+spec:
+  containers:
+  - name: mysql-backup-to-s3
+    image: quay.io/ukhomeofficedigital/mysql-backup-to-s3:v0.0.1
+    imagePullPolicy: Always
+    restartPolicy: Never
+    env:
+    - name: MYSQL_USER
+      value: root
+    - name: MYSQL_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mysql-backup-to-s3
+          key: mysql.password
+    - name: MYSQL_HOST
+      valueFrom:
+        secretKeyRef:
+          name: mysql-backup-to-s3
+          key: mysql.host
+    - name: MYSQL_DB
+      valueFrom:
+        secretKeyRef:
+          name: mysql-backup-to-s3
+          key: mysql.dbname
+    - name: AWS_ACCESS_KEY_ID
+      valueFrom:
+        secretKeyRef:
+          name: mysql-backup-to-s3
+          key: aws.access.key.id
+    - name: AWS_SECRET_ACCESS_KEY
+      valueFrom:
+        secretKeyRef:
+          name: mysql-backup-to-s3
+          key: aws.secret.access.key
+    - name: AWS_S3_BUCKET
+      valueFrom:
+        secretKeyRef:
+          name: mysql-backup-to-s3
+          key: aws.s3.bucket.name
+    - name: AWS_KMS_ID
+      valueFrom:
+        secretKeyRef:
+          name: mysql-backup-to-s3
+          key: aws.kms.id

@@ -1,0 +1,58 @@
+{% set service_name = '' %}
+{% set kms_id = '' %}
+{% set aws_user = service_name.upper() + '_' + env.upper() + '_S3' %}
+{% set service_bucket = service_name + '-' + env + region %}
+---
+name: {{ service_name }}-s3
+disable_rollback: true
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: S3 bucket stack in {{ env }} environment for {{ service_name }}
+Resources:
+
+  S3Bucket{{ service_name }}{{ env }}:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: {{ service_bucket }}
+
+  IAMPolicy{{ service_name }}{{ env }}:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: {{ service_name }}-{{ env }}-iam
+      Users:
+      - {{ aws_user }}
+      PolicyDocument:
+        Statement:
+        - Resource: 'arn:aws:kms:{{ region }}:*:key/{{ kms_id }}'
+          Effect: Allow
+          Action:
+          - 'kms:Decrypt'
+          - 'kms:DescribeKey'
+          - 'kms:Encrypt'
+          - 'kms:GenerateDataKey'
+          - 'kms:GenerateDataKeyWithoutPlaintext'
+          - 'kms:GenerateRandom'
+          - 'kms:GetKeyPolicy'
+          - 'kms:GetKeyRotationStatus'
+          - 'kms:ReEncrypt'
+        - Resource: 'arn:aws:s3:::{{ service_bucket }}*'
+          Effect: Allow
+          Action:
+          - 's3:Get*'
+          - 's3:List*'
+          - 's3:Delete*'
+          - 's3:Put*'
+        - Resource: 'arn:aws:s3:::{{ service_bucket }}*'
+          Effect: Deny
+          Action:
+          - 's3:Put*'
+          Condition:
+            StringNotEquals:
+              s3:x-amz-server-side-encryption: 'aws:kms'
+Outputs:
+  Bucket:
+    Value: '{{ service_bucket }}'
+  KMSID:
+    Value: '{{ kms_id }}'
+  UserName:
+    Value: '{{ aws_user }}'
